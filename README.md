@@ -202,6 +202,35 @@ Automated email notifications sent for:
 Both APIs use the same retry strategy: 3 attempts with exponential backoff (5s, 10s, 15s). This ensures transient network issues or temporary API unavailability don't cause pipeline failures.
 
 ---
+## Monitoring Dashboard (Bonus)
+
+**Live Dashboard:** [View Dashboard]([https://lookerstudio.google.com/reporting/YOUR_DASHBOARD_ID](https://lookerstudio.google.com/reporting/86f5c46e-cf65-4856-8305-61327a0c050d ))
+
+The pipeline includes a monitoring dashboard built with Looker Studio that tracks:
+
+- Pipeline success rate
+- API call counts over time
+- Average API latency (response time)
+- Error rates by source
+- Teams processed per run
+- Pipeline execution duration trends
+
+**Data source:** Metrics are automatically logged from a table in BigQuery after each pipeline run.
+
+**Dashboard Features:**
+- Real-time updates after each pipeline run
+- Historical trend analysis
+- Performance monitoring
+- Error tracking
+
+### Sample Metrics
+
+After 5+ pipeline runs, the dashboard visualizes:
+- API reliability trends (which API is more stable)
+- Performance patterns (time of day variations)
+- Success rate over time
+- Latency comparisons between data sources
+---
 
 ## Technology Stack
 
