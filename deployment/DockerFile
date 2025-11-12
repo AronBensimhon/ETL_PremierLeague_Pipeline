@@ -1,0 +1,86 @@
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first for better caching
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY config.py .
+COPY extract.py .
+COPY transform.py .
+COPY load.py .
+COPY main.py .
+
+# Create directory for credentials
+RUN mkdir -p /app/credentials
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+
+# Run the pipeline
+CMD ["python", "main.py"]
+```
+
+---
+
+## **File 2: deployment/.dockerignore**
+```
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Environment
+.env
+.env.local
+
+# Credentials
+bigquery_credentials*.json
+*.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+
+# Data files
+*.csv
+*.log
+
+# Deployment
+deployment/
+README.md
+SCHEMA.md

@@ -1,0 +1,100 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: premier-league-etl
+  namespace: default
+  labels:
+    app: premier-league-etl
+    component: data-pipeline
+spec:
+  # Run daily at 2:00 AM UTC
+  schedule: "0 2 * * *"
+
+  # Keep last 3 successful and 1 failed job for debugging
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+
+  # Prevent concurrent runs
+  concurrencyPolicy: Forbid
+
+  jobTemplate:
+    metadata:
+      labels:
+        app: premier-league-etl
+        component: data-pipeline
+    spec:
+      # Clean up completed jobs after 1 hour
+      ttlSecondsAfterFinished: 3600
+
+      # Retry failed jobs once
+      backoffLimit: 1
+
+      template:
+        metadata:
+          labels:
+            app: premier-league-etl
+            component: data-pipeline
+        spec:
+          restartPolicy: OnFailure
+
+          # Use service account with BigQuery permissions
+          serviceAccountName: default
+
+          containers:
+          - name: etl-pipeline
+            image: gcr.io/your-project-id/premier-league-etl:latest
+            imagePullPolicy: Always
+
+            # Resource limits
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "250m"
+              limits:
+                memory: "512Mi"
+                cpu: "500m"
+
+            # Environment variables from ConfigMap
+            envFrom:
+            - configMapRef:
+                name: premier-league-etl-config
+
+            # Environment variables from Secret
+            env:
+            - name: API_SPORTS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: premier-league-etl-secrets
+                  key: API_SPORTS_KEY
+
+            - name: API_FOOTBALL_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: premier-league-etl-secrets
+                  key: API_FOOTBALL_KEY
+
+            - name: ALERT_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: premier-league-etl-secrets
+                  key: ALERT_EMAIL
+
+            - name: EMAIL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: premier-league-etl-secrets
+                  key: EMAIL_PASSWORD
+
+            # Mount BigQuery credentials
+            volumeMounts:
+            - name: gcp-credentials
+              mountPath: /app/credentials
+              readOnly: true
+
+          volumes:
+          - name: gcp-credentials
+            secret:
+              secretName: premier-league-etl-secrets
+              items:
+              - key: GOOGLE_APPLICATION_CREDENTIALS_JSON
+                path: bigquery_credentials.json

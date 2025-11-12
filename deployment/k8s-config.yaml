@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: premier-league-etl-config
+  namespace: default
+data:
+  # GCP Configuration
+  GCP_PROJECT_ID: "premier-league-pipeline"
+  BIGQUERY_DATASET_API_SPORTS: "api_sports_data"
+  BIGQUERY_DATASET_API_FOOTBALL: "api_football_data"
+
+  # League Configuration
+  SEASON: "2023"
+  API_SPORTS_LEAGUE: "39"
+  API_FOOTBALL_LEAGUE: "152"
+
+  # Credentials Path
+  GOOGLE_APPLICATION_CREDENTIALS: "/app/credentials/bigquery_credentials.json"
