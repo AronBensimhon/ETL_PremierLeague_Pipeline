@@ -2,6 +2,7 @@ from config import ETLConfig
 from extract import APISportsExtractor, APIFootballExtractor
 from transform import DataValidator, APISportsTransformer, APIFootballTransformer
 from load import BigQueryLoader, EmailAlerter, ErrorTracker
+from metrics import MetricsTracker
 
 
 def main():
@@ -9,12 +10,15 @@ def main():
 
     config = ETLConfig()
     error_tracker = ErrorTracker()
+    metrics_tracker = MetricsTracker(config)
+
+    metrics_tracker.start_pipeline()
 
     print("Starting ETL Pipeline...")
     print("*" * 50)
 
-    api_sports_extractor = APISportsExtractor(config, error_tracker.errors)
-    api_football_extractor = APIFootballExtractor(config, error_tracker.errors)
+    api_sports_extractor = APISportsExtractor(config, error_tracker.errors, metrics_tracker)
+    api_football_extractor = APIFootballExtractor(config, error_tracker.errors, metrics_tracker)
     validator = DataValidator(error_tracker.errors)
     api_sports_transformer = APISportsTransformer(validator, error_tracker.errors)
     api_football_transformer = APIFootballTransformer(validator, error_tracker.errors)
@@ -43,6 +47,8 @@ def main():
             standings_data=standings_data,
             output_file="jsons_and_csvs/api_sports_transformed.json"
         )
+
+        metrics_tracker.record_teams_processed("api_sports", len(api_sports_df))
 
         csv_file = "jsons_and_csvs/api_sports_teams_standings.csv"
         api_sports_df.to_csv(csv_file, index=False)
@@ -82,6 +88,8 @@ def main():
             output_file="jsons_and_csvs/api_football_transformed.json"
         )
 
+        metrics_tracker.record_teams_processed("api_football", len(api_football_df))
+
         csv_file = "jsons_and_csvs/api_football_teams_standings.csv"
         api_football_df.to_csv(csv_file, index=False)
         print(f"\n  Exported to CSV: {csv_file}")
@@ -103,6 +111,8 @@ def main():
             print("\nNote: API-Football may be temporarily unavailable.")
             print("The API-Sports data was still loaded successfully to BigQuery.")
 
+    metrics_tracker.end_pipeline()
+
     print("\n" + "*" * 50)
     print("ETL Pipeline finished!")
 
@@ -116,7 +126,12 @@ def main():
             print("  - api_football_teams_standings.csv")
 
     error_tracker.print_summary()
+
     email_alerter.send_pipeline_status(api_sports_success, api_football_success, error_tracker)
+
+    print("\nSaving metrics to monitoring dashboard...")
+    metrics_tracker.save_to_bigquery()
+
     config.logger.info("ETL Pipeline execution completed")
 
 
