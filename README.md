@@ -322,11 +322,3 @@ If continuing development:
 ## License
 
 MIT
-
----
-
-## Contact
-
-Aron Ben Simhon - aronbensimhon@gmail.com
-
-Questions or feedback? Open an issue on GitHub!
